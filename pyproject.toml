@@ -3,4 +3,4 @@ requires = ["setuptools >= 42", "wheel", "setuptools_scm[toml]>=3.4"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
-write_to = "" # path to version file
+write_to = "src/alias/_version.py"
