@@ -1,0 +1,7 @@
+name: project-template
+channels:
+    - default
+    - conda-forge
+dependencies:
+    - python=3.9
+    - pip
