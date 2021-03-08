@@ -43,6 +43,17 @@ class LinksRegistry:
         self._db.executescript(schema)
 
 
+def init_registry(app: flask.Flask):
+    '''Initialize the registry with the Flask app instance.
+
+    Parameters
+    ----------
+    app : flask.Flask
+        the flask app context (i.e. instance)
+    '''
+    app.teardown_appcontext(close_registry)
+
+
 def get_registry() -> LinksRegistry:
     '''Obtain the app's link registry instance.
 
@@ -54,12 +65,13 @@ def get_registry() -> LinksRegistry:
     if 'registry' in flask.g:
         return flask.g.registry
 
-    registry_path = pathlib.Path(flask.current_app.instance_path) / 'links.sdb'
+    dbname = flask.current_app.config['DATABASE_NAME']
+    registry_path = pathlib.Path(flask.current_app.instance_path) / dbname
     flask.g.registry = LinksRegistry(registry_path)
     return flask.g.registry
 
 
-def close_registry():
+def close_registry(exception=None):
     '''Close the app's link registry if it is currently open.'''
     registry: Optional[LinksRegistry] = flask.g.pop('registry', None)
     if registry is not None:

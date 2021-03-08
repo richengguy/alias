@@ -20,8 +20,11 @@ def create_app() -> Flask:
     else:
         flask_args = {'instance_relative_config': True}  # type: ignore
 
+    from .links import init_registry
+
     app = Flask(__name__.split('.')[0], **flask_args)  # type: ignore
     app.config.from_object('alias.default_config')
+    init_registry(app)
 
     @app.route('/')
     def index():
