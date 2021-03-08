@@ -2,7 +2,6 @@ import pathlib
 from typing import Union
 
 import click
-import flask
 
 from . import _dotenv  # noqa: F401
 from ._version import version
