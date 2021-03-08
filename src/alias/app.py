@@ -1,19 +1,27 @@
+import os
 import pathlib
 
 from flask import Flask
 
+from . import _dotenv  # noqa: F401
+
 
 def create_app() -> Flask:
-    '''Initialize a new 'alias' app instance.
+    '''Configure the WSGI web app instance.
 
     Returns
     -------
     Flask
         the Flask web app instance
     '''
-    app = Flask(__name__, instance_relative_config=True)
-    instance_path = pathlib.Path(app.instance_path)
-    instance_path.mkdir(parents=True, exist_ok=True)
+    if value := os.getenv('ALIAS_INSTANCE_PATH'):
+        path = pathlib.Path(value)
+        flask_args = {'instance_path': path.resolve()}
+    else:
+        flask_args = {'instance_relative_config': True}  # type: ignore
+
+    app = Flask(__name__.split('.')[0], **flask_args)  # type: ignore
+    app.config.from_object('alias.default_config')
 
     @app.route('/')
     def index():

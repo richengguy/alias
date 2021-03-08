@@ -17,13 +17,30 @@ class LinksRegistry:
         Parameters
         ----------
         dbpath : pathlib.Path
-            path to the SQLite database
+            path to the SQLite database file
         '''
         self._db = sqlite3.connect(dbpath, detect_types=sqlite3.PARSE_DECLTYPES)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._db.close()
 
     def close(self):
         '''Close the underlying database connection.'''
         self._db.close()
+
+    def initialize(self):
+        '''Initialize the SQLite database.
+
+        This is a destructive operation that will remove *all* data in the
+        database.  It should be used to either create a new database or reset an
+        existing one.
+        '''
+        from importlib import resources
+        schema = resources.read_text('alias', 'schema.sql')
+        self._db.executescript(schema)
 
 
 def get_registry() -> LinksRegistry:
