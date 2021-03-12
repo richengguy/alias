@@ -49,7 +49,7 @@ class LinksRegistry:
         self._db.executescript(schema)
 
     def add(self, alias: str, url: str):
-        '''Add an alias into the database.
+        '''Add an alias into the registry.
 
         Parameters
         ----------
@@ -57,9 +57,35 @@ class LinksRegistry:
             the link alias; this *must* be unique
         url : str
             the url the alias points to
+
+        Raises
+        ------
+        KeyError
+            if the key already exists
+        ValuError
+            if there was some other error
+        '''
+        try:
+            with self._db:
+                self._db.execute('INSERT INTO links VALUES (?, ?)', (alias, url))
+        except sqlite3.IntegrityError as exc:
+            if str(exc).startswith('UNIQUE constraint'):
+                raise KeyError(f'Could not add \'{alias}\'; it already exists.')
+            else:
+                raise ValueError(f'Could not add \'{alias}\'.') from exc
+
+    def remove(self, alias: str):
+        '''Remove an alias from the registry.
+
+        Parameters
+        ----------
+        alias : str
+            alias to remove
         '''
         with self._db:
-            self._db.execute('INSERT INTO links VALUES (?, ?)', (alias, url))
+            rows = self._db.execute('DELETE FROM links WHERE shortcut == (?)', (alias,))
+            if rows.rowcount == 0:
+                raise KeyError(f'There is no \'{alias}\' in the registry.')
 
     def list(self) -> list[LinkEntry]:
         '''List all of the available links.

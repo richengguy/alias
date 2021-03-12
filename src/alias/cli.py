@@ -1,4 +1,5 @@
 import pathlib
+import traceback
 from typing import Tuple, Union
 
 import click
@@ -58,9 +59,31 @@ def add_link(alias: str, url: str):
     '''
     _, dbfile = _get_app_info()
     with LinksRegistry(dbfile) as links:
-        click.echo(f'Adding {alias} -> {url}...', nl=False)
-        links.add(alias, url)
-        click.secho('DONE', fg='green', bold=True)
+        try:
+            click.echo(f'Adding {alias} -> {url}...', nl=False)
+            links.add(alias, url)
+            click.secho('DONE', fg='green', bold=True)
+        except KeyError as exc:
+            click.secho('ERROR', fg='red', bold=True)
+            click.secho(str(exc), bold=True)
+        except ValueError:
+            click.secho('ERROR', fg='red', bold=True)
+            traceback.print_exc(limit=2)
+
+
+@main.command('remove')
+@click.argument('alias')
+def remove_link(alias: str):
+    '''Removes an alias link.'''
+    _, dbfile = _get_app_info()
+    with LinksRegistry(dbfile) as links:
+        try:
+            click.secho(f'Removing {alias}...', nl=False)
+            links.remove(alias)
+            click.secho('DONE', fg='green', bold=True)
+        except KeyError as exc:
+            click.secho('ERROR', fg='red', bold=True)
+            click.secho(str(exc), bold=True)
 
 
 @main.command('list')
