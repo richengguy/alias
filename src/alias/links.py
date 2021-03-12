@@ -1,8 +1,13 @@
 import pathlib
 import sqlite3
-from typing import Optional
+from typing import NamedTuple, Optional
 
 import flask
+
+
+class LinkEntry(NamedTuple):
+    alias: str
+    href: str
 
 
 class LinksRegistry:
@@ -20,6 +25,7 @@ class LinksRegistry:
             path to the SQLite database file
         '''
         self._db = sqlite3.connect(dbpath, detect_types=sqlite3.PARSE_DECLTYPES)
+        self._db.row_factory = sqlite3.Row
 
     def __enter__(self):
         return self
@@ -41,6 +47,30 @@ class LinksRegistry:
         from importlib import resources
         schema = resources.read_text('alias', 'schema.sql')
         self._db.executescript(schema)
+
+    def add(self, alias: str, url: str):
+        '''Add an alias into the database.
+
+        Parameters
+        ----------
+        alias : str
+            the link alias; this *must* be unique
+        url : str
+            the url the alias points to
+        '''
+        with self._db:
+            self._db.execute('INSERT INTO links VALUES (?, ?)', (alias, url))
+
+    def list(self) -> list[LinkEntry]:
+        '''List all of the available links.
+
+        Returns
+        -------
+        list of `(alias, url)` pairs
+            list of the stored aliases
+        '''
+        rows = self._db.execute('SELECT * FROM links')
+        return list(LinkEntry(r['shortcut'], r['href']) for r in rows)
 
 
 def init_registry(app: flask.Flask):
