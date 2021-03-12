@@ -87,6 +87,25 @@ class LinksRegistry:
             if rows.rowcount == 0:
                 raise KeyError(f'There is no \'{alias}\' in the registry.')
 
+    def get(self, alias: str) -> str:
+        '''Obtain the URL for the given alias.
+
+        Parameters
+        ----------
+        alias : str
+            link alias
+
+        Returns
+        -------
+        str
+            resolved URL
+        '''
+        rows = self._db.execute('SELECT * FROM links WHERE shortcut == (?)', (alias,))
+        entry = rows.fetchone()
+        if entry is None:
+            raise KeyError(f'Could not find \'{alias}\'.')
+        return entry['href']
+
     def list(self) -> list[LinkEntry]:
         '''List all of the available links.
 

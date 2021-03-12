@@ -1,9 +1,10 @@
 import os
 import pathlib
 
-from flask import Flask
+from flask import Flask, abort, redirect
 
 from . import _dotenv  # noqa: F401
+from .links import init_registry, get_registry
 
 
 def create_app() -> Flask:
@@ -20,14 +21,17 @@ def create_app() -> Flask:
     else:
         flask_args = {'instance_relative_config': True}  # type: ignore
 
-    from .links import init_registry
-
     app = Flask(__name__.split('.')[0], **flask_args)  # type: ignore
     app.config.from_object('alias.default_config')
     init_registry(app)
 
-    @app.route('/')
-    def index():
-        return 'Link Aliasing'
+    @app.route('/<string:alias>')
+    def index(alias: str):
+        registry = get_registry()
+        try:
+            url = registry.get(alias)
+            return redirect(url, code=301)
+        except KeyError:
+            abort(404)
 
     return app
