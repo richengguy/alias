@@ -1,8 +1,13 @@
 import pathlib
 import sqlite3
-from typing import Optional
+from typing import NamedTuple, Optional
 
 import flask
+
+
+class LinkEntry(NamedTuple):
+    alias: str
+    href: str
 
 
 class LinksRegistry:
@@ -20,12 +25,19 @@ class LinksRegistry:
             path to the SQLite database file
         '''
         self._db = sqlite3.connect(dbpath, detect_types=sqlite3.PARSE_DECLTYPES)
+        self._db.row_factory = sqlite3.Row
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self._db.close()
+        self.close()
+
+    @property
+    def num_links(self) -> int:
+        '''int: The number of links stored in the registry.'''
+        count = self._db.execute('SELECT COUNT(*) FROM links')
+        return count.fetchone()[0]
 
     def close(self):
         '''Close the underlying database connection.'''
@@ -41,6 +53,75 @@ class LinksRegistry:
         from importlib import resources
         schema = resources.read_text('alias', 'schema.sql')
         self._db.executescript(schema)
+
+    def add(self, alias: str, url: str):
+        '''Add an alias into the registry.
+
+        Parameters
+        ----------
+        alias : str
+            the link alias; this *must* be unique
+        url : str
+            the url the alias points to
+
+        Raises
+        ------
+        KeyError
+            if the key already exists
+        ValuError
+            if there was some other error
+        '''
+        try:
+            with self._db:
+                self._db.execute('INSERT INTO links VALUES (?, ?)', (alias, url))
+        except sqlite3.IntegrityError as exc:
+            if str(exc).startswith('UNIQUE constraint'):
+                raise KeyError(f'Could not add \'{alias}\'; it already exists.')
+            else:
+                raise ValueError(f'Could not add \'{alias}\'.') from exc
+
+    def remove(self, alias: str):
+        '''Remove an alias from the registry.
+
+        Parameters
+        ----------
+        alias : str
+            alias to remove
+        '''
+        with self._db:
+            rows = self._db.execute('DELETE FROM links WHERE shortcut == (?)', (alias,))
+            if rows.rowcount == 0:
+                raise KeyError(f'There is no \'{alias}\' in the registry.')
+
+    def get(self, alias: str) -> str:
+        '''Obtain the URL for the given alias.
+
+        Parameters
+        ----------
+        alias : str
+            link alias
+
+        Returns
+        -------
+        str
+            resolved URL
+        '''
+        rows = self._db.execute('SELECT * FROM links WHERE shortcut == (?)', (alias,))
+        entry = rows.fetchone()
+        if entry is None:
+            raise KeyError(f'Could not find \'{alias}\'.')
+        return entry['href']
+
+    def list(self) -> list[LinkEntry]:
+        '''List all of the available links.
+
+        Returns
+        -------
+        list of `(alias, url)` pairs
+            list of the stored aliases
+        '''
+        rows = self._db.execute('SELECT * FROM links')
+        return list(LinkEntry(r['shortcut'], r['href']) for r in rows)
 
 
 def init_registry(app: flask.Flask):
