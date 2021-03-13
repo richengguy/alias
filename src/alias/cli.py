@@ -65,10 +65,15 @@ def add_link(alias: str, url: str):
             click.secho('DONE', fg='green', bold=True)
         except KeyError as exc:
             click.secho('ERROR', fg='red', bold=True)
-            click.secho(str(exc), bold=True)
+            err = click.ClickException(str(exc))
+            err.exit_code = 1
+            raise err
         except ValueError:
             click.secho('ERROR', fg='red', bold=True)
             traceback.print_exc(limit=2)
+            err = click.ClickException('See traceback.')
+            err.exit_code = 2
+            raise err
 
 
 @main.command('remove')
@@ -83,11 +88,13 @@ def remove_link(alias: str):
             click.secho('DONE', fg='green', bold=True)
         except KeyError as exc:
             click.secho('ERROR', fg='red', bold=True)
-            click.secho(str(exc), bold=True)
+            err = click.ClickException(str(exc))
+            err.exit_code = 1
+            raise err
 
 
 @main.command('list')
-def list_aliases():
+def list_aliases():  # pragma: nocover
     '''List all stored aliases.'''
     _, dbfile = _get_app_info()
 
@@ -99,5 +106,5 @@ def list_aliases():
             click.echo(rowfmt.format(entry.alias, entry.href))
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: nocover
     main()
