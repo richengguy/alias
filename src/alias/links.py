@@ -31,7 +31,13 @@ class LinksRegistry:
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self._db.close()
+        self.close()
+
+    @property
+    def num_links(self) -> int:
+        '''int: The number of links stored in the registry.'''
+        count = self._db.execute('SELECT COUNT(*) FROM links')
+        return count.fetchone()[0]
 
     def close(self):
         '''Close the underlying database connection.'''
