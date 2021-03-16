@@ -49,7 +49,7 @@ jobs:
       - name: Check that it returns the correct redirects.
         continue-on-error: true
         run: |
-          ./tests/check_response.sh search 301 https://www.google.com/
+          ./tests/check_response.sh search 302 https://www.google.com/
           ./tests/check_response.sh unknown 404 ""
 
       - name: Shutdown the container.
