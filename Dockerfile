@@ -18,3 +18,4 @@ RUN pip install --no-cache-dir -r requirements-docker.txt
 RUN pip install --no-cache-dir /wheels/*
 
 USER app
+CMD ["gunicorn", "alias:create_app()", "--bind", "0.0.0.0:8000"]
