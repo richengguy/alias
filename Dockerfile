@@ -4,15 +4,17 @@ FROM python:3.9 as build
 WORKDIR /usr/src/app
 COPY . .
 
-RUN pip install -r dependencies/requirements-dist.txt
+RUN pip install -r dependencies/requirements-build.txt
 RUN python setup.py bdist_wheel
 
 # Execution Container
-FROM python:3.9-slim
+FROM python:3.9-alpine
 
 RUN adduser --system app
 
 COPY --from=build /usr/src/app/dist /wheels
-RUN pip install --no-cache /wheels/*
+COPY dependencies/requirements-docker.txt .
+RUN pip install --no-cache-dir -r requirements-docker.txt
+RUN pip install --no-cache-dir /wheels/*
 
 USER app
