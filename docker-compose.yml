@@ -3,6 +3,7 @@ services:
   alias:
     build:
       context: .
+      dockerfile: deployment/Dockerfile.alias
       labels:
         ca.rzeszutek.alias: "Simplified Link Shortener"
     networks:
