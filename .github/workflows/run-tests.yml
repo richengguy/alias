@@ -49,7 +49,7 @@ jobs:
         run: |
           docker-compose up -d
 
-          ./tests/check_response.sh search 302 https://www.google.com/
+          ./tests/check_response.sh search 301 https://www.google.com/
           ./tests/check_response.sh unknown 404 ""
 
           exit_code=0
