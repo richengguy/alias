@@ -15,9 +15,11 @@ http_code=$(sed -n '1p' <<< "$parts")
 redirect=$(sed -n '2p' <<< "$parts")
 
 if [ "$http_code" != "$2" ]; then
-    echo "::error::Returned an ${http_code} code instead of a 301."
+    echo "::error::Returned an ${http_code} code instead of a $2."
+    touch error_occurred
 fi
 
 if [ "$redirect" != "$3" ]; then
     echo "::error::Returned an '${redirect}' instead of '$3'"
+    touch error_occurred
 fi
