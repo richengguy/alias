@@ -1,0 +1,20 @@
+.vscode
+
+# Project Files
+.flaskenv
+instance/
+
+# Python Build Results
+build
+dist
+
+# Python Intermediate Output
+*.egg-info
+*.pyc
+__pycache__/
+
+# Test Output
+.coverage
+.mypy*
+.tox
+htmlcov

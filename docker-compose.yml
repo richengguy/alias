@@ -1,0 +1,37 @@
+services:
+
+  app:
+    build:
+      context: .
+      dockerfile: deployment/Dockerfile.alias
+      labels:
+        ca.rzeszutek.alias: "Simplified Link Shortener"
+    networks:
+      - internal
+    ports:
+      - "8000"
+    volumes:
+      - alias_instance:/home/app/instance
+
+  proxy:
+    build:
+      context: deployment
+      dockerfile: Dockerfile.Caddy
+    restart: unless-stopped
+    depends_on:
+      - app
+    networks:
+      - internal
+    ports:
+      - "8000:8000"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+
+networks:
+  internal:
+
+volumes:
+  alias_instance:
+  caddy_data:
+  caddy_config:

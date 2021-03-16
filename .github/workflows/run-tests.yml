@@ -7,8 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
-
+  python:
     runs-on: ubuntu-latest
 
     steps:
@@ -34,3 +33,29 @@ jobs:
     - name: Test with tox
       run: |
         tox
+
+  docker:
+    needs: python
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build the Docker container.
+        run: |
+          docker-compose build
+          docker-compose run app alias-app add search https://www.google.com/
+
+      - name: Check that it returns the correct redirects.
+        run: |
+          docker-compose up -d
+
+          ./tests/check_response.sh search 301 https://www.google.com/
+          ./tests/check_response.sh unknown 404 ""
+
+          exit_code=0
+          if [ -f "error_occurred" ]; then
+              exit_code=1
+          fi
+
+          docker-compose down
+          exit ${exit_code}
